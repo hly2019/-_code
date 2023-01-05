@@ -1,0 +1,67 @@
+import numpy as np
+from PIL import Image
+import utils
+import jittor as jt
+from graph import buildGraph
+
+subdir = "../数据/input/"
+dir_num = 1
+
+pic_name_pref = "result_img"
+pic_num = 1
+
+# src = np.asarray(Image.open(filename))[...,:3]
+def read_and_mask(filepath, maskpath, targetpath):
+    src = np.asarray(Image.open(filepath))[...,:3]
+    mask = np.asarray(Image.open(maskpath))[...,:3]
+    shape = src.shape
+    raw = shape[0]
+    col = shape[1]
+    output = np.zeros((raw, col, 3))
+    for i in range(raw):
+        for j in range(col):
+            ori_rgb = src[i][j]
+            mask_rgb = mask[i][j]
+            if mask_rgb[0] < 25 and mask_rgb[1] < 25 and mask_rgb[2] < 25:
+                output[i][j] = mask_rgb
+            else:
+                output[i][j] = ori_rgb
+    Image.fromarray((output).astype(np.uint8)).save(targetpath)
+
+
+def calcConv(filepath, maskedpath):
+    A = np.asarray(Image.open(filepath))[...,:3]
+    kernel = utils.bfs_get_kernel(maskedpath)
+    js = jt.array(A)
+    jk = jt.array(kernel)
+    jy = utils.calcConvJittor(js, jk)
+    return jy, kernel
+
+
+
+
+
+
+
+read_and_mask("../数据/down_input1.jpg", "../数据/down_input1_mask.jpg", "./down_masked.png")
+# utils.bfs_get_kernel("./masked.png")
+y, kernel = calcConv("../数据/input1/down_result_img001.jpg", "kernel.jpg")
+print(y.shape)
+
+y_row = y.shape[0]
+y_col = y.shape[1]
+min = 10000000000
+offset_r = -1
+offset_c = -1
+for r in range(y_row):
+    for c in range(y_col):
+        # print(y[r][c])
+        if y[r][c] < min:
+            min = y[r][c]
+            offset_r = r
+            offset_c = c
+print(offset_r, offset_c)
+
+partition = buildGraph(offset_r, offset_c, "../数据/down_input1.jpg" , "../数据/input1/down_result_img001.jpg", kernel)
+
+
