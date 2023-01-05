@@ -24,7 +24,7 @@ def dilatation(image):
     if src is None:
         print('Could not open or find the image: ', image)
         exit(0)
-    dilatation_size = 14
+    dilatation_size = 16
     dilation_shape = morph_shape(2)
     # print("which?{}".format(cv.getTrackbarPos(title_trackbar_element_shape, title_dilation_window)))
     element = cv.getStructuringElement(dilation_shape, (2 * dilatation_size + 1, 2 * dilatation_size + 1),
@@ -69,6 +69,7 @@ def bfs_get_kernel(masked_path):
         x, y = xy
         output[x][y] = [255, 255, 255]
     Image.fromarray((output).astype(np.uint8)).save("tmp.jpg")
+    # exit()
     
     dilatation("tmp.jpg")
     
@@ -76,7 +77,7 @@ def bfs_get_kernel(masked_path):
     tmp = np.asarray(Image.open("xxx.jpg"))[...,:3]
     for i in range(raw):
         for j in range(col):
-            if (tmp[i][j] >= [230, 230, 230]).all():
+            if (tmp[i][j] >= [200, 200, 200]).all():
                 pic_b[i][j] = pic[i][j]
     up = -1
     down = raw
@@ -120,7 +121,7 @@ def bfs_get_kernel(masked_path):
             kernel[r - up][c - left] = pic_b[r][c]
     # print(kernel.shape)
     Image.fromarray((kernel).astype(np.uint8)).save("kernel.jpg")
-    return kernel
+    return kernel, up, left
 
 
 def calcL2(A, kernel, offset_r, offset_c): # A是原图。计算这个位置下的L2误差

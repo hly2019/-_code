@@ -22,8 +22,8 @@ def read_and_mask(filepath, maskpath, targetpath):
         for j in range(col):
             ori_rgb = src[i][j]
             mask_rgb = mask[i][j]
-            if mask_rgb[0] < 25 and mask_rgb[1] < 25 and mask_rgb[2] < 25:
-                output[i][j] = mask_rgb
+            if mask_rgb[0] < 20 and mask_rgb[1] < 20 and mask_rgb[2] < 20:
+                output[i][j] = [0, 0, 0]
             else:
                 output[i][j] = ori_rgb
     Image.fromarray((output).astype(np.uint8)).save(targetpath)
@@ -31,11 +31,11 @@ def read_and_mask(filepath, maskpath, targetpath):
 
 def calcConv(filepath, maskedpath):
     A = np.asarray(Image.open(filepath))[...,:3]
-    kernel = utils.bfs_get_kernel(maskedpath)
+    kernel, ori_offset_r, ori_offset_c = utils.bfs_get_kernel(maskedpath)
     js = jt.array(A)
     jk = jt.array(kernel)
     jy = utils.calcConvJittor(js, jk)
-    return jy, kernel
+    return jy, kernel, ori_offset_r, ori_offset_c
 
 
 
@@ -45,7 +45,7 @@ def calcConv(filepath, maskedpath):
 
 read_and_mask("../数据/down_input1.jpg", "../数据/down_input1_mask.jpg", "./down_masked.png")
 # utils.bfs_get_kernel("./masked.png")
-y, kernel = calcConv("../数据/input1/down_result_img001.jpg", "kernel.jpg")
+y, kernel, ori_offset_r, ori_offset_c = calcConv("../数据/input1/down_result_img001.jpg", "./down_masked.png")
 print(y.shape)
 
 y_row = y.shape[0]
@@ -62,6 +62,6 @@ for r in range(y_row):
             offset_c = c
 print(offset_r, offset_c)
 
-partition = buildGraph(offset_r, offset_c, "../数据/down_input1.jpg" , "../数据/input1/down_result_img001.jpg", kernel)
+partition = buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, "../数据/down_input1.jpg" , "../数据/input1/down_result_img001.jpg", kernel)
 
 

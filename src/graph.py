@@ -9,11 +9,11 @@ graph = nx.Graph()
 # graph[(-1, -1)] = {} # patch A
 # graph[(-2, -2)] = {} # patch B
 
-def calcM(s_x, s_y, t_x, t_y, A, B):
-    rgb_a_s = np.float32(A[s_x][s_y])
-    rgb_a_t = np.float32(A[t_x][t_y])
-    rgb_b_s = np.float32(B[s_x][s_y])
-    rgb_b_t = np.float32(B[t_x][t_y])
+def calcM(A_s_x, A_s_y, A_t_x, A_t_y, B_s_x, B_s_y, B_t_x, B_t_y, A, B):
+    rgb_a_s = np.float32(A[A_s_x][A_s_y])
+    rgb_a_t = np.float32(A[A_t_x][A_t_y])
+    rgb_b_s = np.float32(B[B_s_x][B_s_y])
+    rgb_b_t = np.float32(B[B_t_x][B_t_y])
     
     try:
         # print(rgb_a_s, rgb_a_t, rgb_b_s, rgb_b_t)
@@ -26,7 +26,7 @@ def calcM(s_x, s_y, t_x, t_y, A, B):
 def isBlack(r, c, pic):
     return pic[r][c][0] < 5 and pic[r][c][1] < 5 and pic[r][c][2] < 5
 
-def buildGraph(offset_r, offset_c, input_path, result_path, kernel, vertical=True):
+def buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, input_path, result_path, kernel, vertical=True):
     input_pic = np.asarray(Image.open(input_path))[...,:3]
     result_pic = np.asarray(Image.open(result_path))[...,:3]
 
@@ -36,8 +36,8 @@ def buildGraph(offset_r, offset_c, input_path, result_path, kernel, vertical=Tru
     big_col = input_pic.shape[1]
     for r in range(row):
         for c in range(col):
-            if isBlack(r, c, kernel) or r + offset_r >= big_row or c + offset_c >= big_col:
-                continue
+            # if isBlack(r, c, kernel) or r + offset_r >= big_row or c + offset_c >= big_col:
+            #     continue
             # graph[(r+offset_r, c+offset_c)] = {}
             graph.add_node((r+offset_r, c+offset_c))
             if vertical:
