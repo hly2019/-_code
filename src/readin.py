@@ -60,8 +60,44 @@ for r in range(y_row):
             min = y[r][c]
             offset_r = r
             offset_c = c
-print(offset_r, offset_c)
+
 
 partition = buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, "../数据/down_input1.jpg" , "../数据/input1/down_result_img001.jpg", kernel)
 
+source, dest = partition
+test = np.zeros((kernel.shape[0], kernel.shape[1], 3))
 
+for xy in source:
+    x, y = xy
+    test[x][y] = kernel[x][y]
+for xy in dest:
+    x, y = xy
+    test[x][y] = kernel[x][y]
+Image.fromarray((test).astype(np.uint8)).save("test_graph.jpg")
+
+origin = np.asarray(Image.open("../数据/down_input1.jpg"))[...,:3]
+mask = np.asarray(Image.open("./down_masked.png"))[...,:3]
+res = np.asarray(Image.open("../数据/input1/down_result_img001.jpg"))[...,:3]
+
+output = np.zeros((mask.shape[0], mask.shape[1], 3))
+for r in range(output.shape[0]):
+    for c in range(output.shape[1]):
+        if (mask[r][c] > [20, 20, 20]).all():
+            output[r][c] = origin[r][c]
+        #     # print("xxxx")
+        else:
+            output[r][c] = res[r-ori_offset_r+offset_r][c-ori_offset_c+offset_c]
+Image.fromarray((output).astype(np.uint8)).save("test_ori.jpg")
+
+for rc in source:
+    r, c = rc
+    output[r+ori_offset_r][c+ori_offset_c] = origin[r+ori_offset_r][c+ori_offset_c]
+for rc in dest:
+    r, c = rc
+    output[r+ori_offset_r][c+ori_offset_c] = res[r+offset_r][c+offset_c]
+    print("test")
+print(offset_r, offset_c)
+print(ori_offset_r, ori_offset_c)
+Image.fromarray((output).astype(np.uint8)).save("test.jpg")
+
+    
