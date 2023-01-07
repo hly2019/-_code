@@ -202,7 +202,52 @@ def calcConvJittor(A, kernel):
     return y
     
     
+def adjacent(x, y, a, b):
+    return (x-1==a and y==b) or (x+1==a and y==b) or (x==a and y-1==b) or (x==a and y+1==b)
 
-                
+def calcMatrixA(res_list: list):
+    N = res_list.__len__()
+    print("size:{}".format(N))
+    MaxtrixA = np.zeros((N, N, ), dtype=np.uint8)
+    for i in range(N):
+        for j in range(N):
+            if i == j:
+                MaxtrixA[i][j] = 4
+            elif adjacent(res_list[i][0], res_list[i][1], res_list[j][0], res_list[j][1]):
+                MaxtrixA[i][j] = -1
+            else:
+                MaxtrixA[i][j] = 0
+    return MaxtrixA
+
+def calcB(res_list, res_pic):
+    N = res_list.__len__()
+    ret_r = []
+    ret_g = []
+    ret_b = []
+    for i in range(N):
+        x, y = res_list[i]
+        row = res_pic.shape[0]
+        col = res_pic.shape[1]
+        rgb = res_pic[x][y]
+        adj_list = []
+        if x+1 < row:
+            adj_list.append((x+1, y))
+        if x-1 >= 0:
+            adj_list.append((x-1, y))        
+        if y+1 < col:
+            adj_list.append((x, y+1))
+        if y-1 >= 0:
+            adj_list.append((x, y-1))
+        tmp = len(adj_list) * rgb
+        for ab in adj_list:
+            a, b = ab
+            tmp -= res_pic[a][b]
+        ret_r.append(tmp[0])
+        ret_g.append(tmp[1])
+        ret_b.append(tmp[2])
+    return ret_r, ret_g, ret_b # 返回三个颜色通道的b向量
+        
+        
+    
 
     
