@@ -23,7 +23,7 @@ def calcM(s_x, s_y, t_x, t_y, offset_r_a, offset_c_a, offset_r_b, offset_c_b, A,
 def isBlack(r, c, pic):
     return pic[r][c][0] < 5 and pic[r][c][1] < 5 and pic[r][c][2] < 5
 
-def buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, input_path, result_path, kernel, vertical=True):
+def buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, input_path, result_path, kernel, type=1):
     graph = nx.Graph()
     input_pic = np.asarray(Image.open(input_path))[...,:3]
     result_pic = np.asarray(Image.open(result_path))[...,:3]
@@ -38,14 +38,21 @@ def buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, input_path, resul
                 continue
             # graph[(r+offset_r, c+offset_c)] = {}
             graph.add_node((r, c))
-            if vertical: # -1 -1 为原图， -2 -2 为新图
+            if type == 1 or type == 3: # -1 -1 为原图， -2 -2 为新图
                 if (r-1 >=0 and isBlack(r-1, c, kernel)) or r == 0:
                     # graph[(-1, -1)][(r+offset_r, c+offset_c)] = np.inf
                     graph.add_edge((-1, -1), (r, c), capacity=np.inf)
                 elif (r + 1 < row and isBlack(r+1, c, kernel)) or r + 1 == row:
                     # graph[(-2, -2)][(r+offset_r, c+offset_c)] = np.inf
                     graph.add_edge((-2, -2), (r, c), capacity=np.inf)
-            else:
+            elif type ==2:
+                if (r + 1 < row and isBlack(r+1, c, kernel)) or r + 1 == row:
+                    # graph[(-1, -1)][(r+offset_r, c+offset_c)] = np.inf
+                    graph.add_edge((-1, -1), (r, c), capacity=np.inf)
+                elif (r-1 >=0 and isBlack(r-1, c, kernel)) or r == 0:
+                    # graph[(-2, -2)][(r+offset_r, c+offset_c)] = np.inf
+                    graph.add_edge((-2, -2), (r, c), capacity=np.inf)
+            elif type == 4:
                 if (c-1 >= 0 and isBlack(r, c-1, kernel)) or c == 0:
                     graph.add_edge((-1, -1), (r, c), capacity=np.inf)
                     # graph[(-1, -1)][(r+offset_r, c+offset_c)] = np.inf

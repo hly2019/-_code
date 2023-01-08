@@ -24,7 +24,7 @@ def dilatation(image):
     if src is None:
         print('Could not open or find the image: ', image)
         exit(0)
-    dilatation_size = 16
+    dilatation_size = 10
     dilation_shape = cv.MORPH_ELLIPSE
     # print("which?{}".format(cv.getTrackbarPos(title_trackbar_element_shape, title_dilation_window)))
     element = cv.getStructuringElement(dilation_shape, (2 * dilatation_size + 1, 2 * dilatation_size + 1),
@@ -195,6 +195,7 @@ def calcMatrixA(res_list: list):
                 MaxtrixA[i][j] = -1
             else:
                 MaxtrixA[i][j] = 0
+    # print("A: {}".format(MaxtrixA))
     return MaxtrixA
 
 def calcB(res_list, source_pic, target_pic, source_offset_r, source_offset_c, target_offset_r, target_offset_c):
