@@ -5,7 +5,7 @@ import copy
 import cv2 as cv
 import math
 import networkx as nx
-
+# 边权计算。
 def calcM(s_x, s_y, t_x, t_y, offset_r_a, offset_c_a, offset_r_b, offset_c_b, A, B):
     rgb_a_s = np.float32(A[s_x+offset_r_a][s_y+offset_c_a])
     rgb_a_t = np.float32(A[t_x+offset_r_a][t_y+offset_c_a])
@@ -23,6 +23,7 @@ def calcM(s_x, s_y, t_x, t_y, offset_r_a, offset_c_a, offset_r_b, offset_c_b, A,
 def isBlack(r, c, pic):
     return pic[r][c][0] < 5 and pic[r][c][1] < 5 and pic[r][c][2] < 5
 
+# 通过networkx建图，并且调用对应函数求最小割
 def buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, input_path, result_path, kernel, type=1):
     graph = nx.Graph()
     input_pic = np.asarray(Image.open(input_path))[...,:3]
@@ -38,7 +39,8 @@ def buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, input_path, resul
                 continue
             # graph[(r+offset_r, c+offset_c)] = {}
             graph.add_node((r, c))
-            if type == 1 or type == 3: # -1 -1 为原图， -2 -2 为新图
+            # 这里根据四种mask的形状，手动考虑了下原图、候选图在graph中分别对应source还是dest。虽然缺乏可扩展性，但这里效果不错。
+            if type == 1 or type == 3: 
                 if (r-1 >=0 and isBlack(r-1, c, kernel)) or r == 0:
                     # graph[(-1, -1)][(r+offset_r, c+offset_c)] = np.inf
                     graph.add_edge((-1, -1), (r, c), capacity=np.inf)
@@ -77,7 +79,7 @@ def buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, input_path, resul
         if (r, c-1) in graph:
             # graph[(r, c)][(r, c-1)] = calcM(r, c, r, c-1, input_pic, result_pic)
             graph.add_edge((r, c), (r, c-1), capacity=calcM(r, c, r, c-1, ori_offset_r, ori_offset_c, offset_r, offset_c, input_pic, result_pic))
-    cut_value, partition = nx.minimum_cut(graph, (-1, -1), (-2, -2))
+    cut_value, partition = nx.minimum_cut(graph, (-1, -1), (-2, -2)) # 求最小割，得到和source、dest对应的partition
     reachable, unreachable = partition
     print(reachable.__len__(), unreachable.__len__())
     return partition

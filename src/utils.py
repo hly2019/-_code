@@ -33,7 +33,9 @@ def dilatation(image):
     # print(dilatation_dst.shape)
     Image.fromarray((dilatation_dst).astype(np.uint8)).save("dilatation.jpg")
 
-def bfs_get_kernel(masked_path):
+# 计算卷积核
+def dila_get_kernel(masked_path):
+    # 第一步，寻找mask的边界
     pic = np.asarray(Image.open(masked_path))[...,:3]
     shape = pic.shape
     raw = shape[0]
@@ -56,19 +58,20 @@ def bfs_get_kernel(masked_path):
         elif y - 1 >= 0 and not (pic[x][y-1][0] == 0 and pic[x][y-1][1] == 0 and pic[x][y-1][2] == 0):
             edge_black_queue.append((x, y))
     
-    for xy in edge_black_queue:
+    for xy in edge_black_queue: # 得到了mask的边界，下一步要扩展像素。
         x, y = xy
         output[x][y] = [255, 255, 255]
     Image.fromarray((output).astype(np.uint8)).save("tmp.jpg")
     
-    dilatation("tmp.jpg")
+    dilatation("tmp.jpg") # 通过opencv做扩展
     
     pic_b = np.zeros((raw, col, 3))
     tmp = np.asarray(Image.open("dilatation.jpg"))[...,:3]
     for i in range(raw):
         for j in range(col):
-            if (tmp[i][j] >= [200, 200, 200]).all():
+            if (tmp[i][j] >= [200, 200, 200]).all(): # 拿到扩展后区域在原图上的图像信息（排除了被mask的部分）
                 pic_b[i][j] = pic[i][j]
+    # 下面是要找到上下左右的紧边界。
     up = -1
     down = raw
     left = -1
@@ -110,7 +113,7 @@ def bfs_get_kernel(masked_path):
     Image.fromarray((kernel).astype(np.uint8)).save("kernel.jpg")
     return kernel, up, left
 
-
+# 暴力计算，没有用到
 def calcL2(A, kernel, offset_r, offset_c): # A是原图。计算这个位置下的L2误差
     shape_a = A.shape
     # row_a = shape_a[0]
@@ -129,7 +132,7 @@ def calcL2(A, kernel, offset_r, offset_c): # A是原图。计算这个位置下�
                 rgb_a = A[r_a][c_a]
                 L2 += calc_rgb_l2(rgb_kernel, rgb_a)
     return L2
-        
+# 暴力计算，没有用到  
 def bestLocOffset(A, kernel):
     shape_a = A.shape
     row_a = shape_a[0]
@@ -153,6 +156,7 @@ def bestLocOffset(A, kernel):
                 min_o_c = o_c
     return min_o_r, min_o_c
 
+# 通过计图计算卷积，参考计图教程
 def calcConvJittor(A, kernel):
     a_r = A.shape[0]
     a_c = A.shape[1]
@@ -161,6 +165,7 @@ def calcConvJittor(A, kernel):
     offset_r_max = a_r - k_r + 1
     offset_c_max = a_c - k_c + 1
     y = np.zeros([a_r - k_r + 1, a_c - k_c + 1, 1])
+    # 迭代的写法，可以得出reindex里i的组合关系
     # for i0 in range(offset_r_max):
     #     for i1 in range(offset_c_max):
     #         for i2 in range(k_r):
@@ -183,7 +188,7 @@ def calcConvJittor(A, kernel):
 def adjacent(x, y, a, b):
     return (x-1==a and y==b) or (x+1==a and y==b) or (x==a and y-1==b) or (x==a and y+1==b)
 
-def calcMatrixA(res_list: list):
+def calcMatrixA(res_list: list): # 计算矩阵A
     N = res_list.__len__()
     print("size:{}".format(N))
     MaxtrixA = np.zeros((N, N, ))
@@ -197,7 +202,7 @@ def calcMatrixA(res_list: list):
                 MaxtrixA[i][j] = 0
     # print("A: {}".format(MaxtrixA))
     return MaxtrixA
-
+# 计算b
 def calcB(res_list, source_pic, target_pic, source_offset_r, source_offset_c, target_offset_r, target_offset_c):
     N = res_list.__len__()
     ret_r = []

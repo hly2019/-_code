@@ -11,7 +11,7 @@ dir_num = 1
 pic_name_pref = "result_img"
 pic_num = 1
 
-# src = np.asarray(Image.open(filename))[...,:3]
+
 def read_and_mask(filepath, maskpath, targetpath):
     src = np.asarray(Image.open(filepath))[...,:3]
     mask = np.asarray(Image.open(maskpath))[...,:3]
@@ -32,10 +32,10 @@ def read_and_mask(filepath, maskpath, targetpath):
 
 def calcConv(filepath, maskedpath):
     A = np.asarray(Image.open(filepath))[...,:3]
-    kernel, ori_offset_r, ori_offset_c = utils.bfs_get_kernel(maskedpath)
+    kernel, ori_offset_r, ori_offset_c = utils.dila_get_kernel(maskedpath) #得到kernel
     js = jt.array(A)
     jk = jt.array(kernel)
-    jy = utils.calcConvJittor(js, jk)
+    jy = utils.calcConvJittor(js, jk)# 计算卷积
     return jy, kernel, ori_offset_r, ori_offset_c
 
 
@@ -45,8 +45,8 @@ def calcConv(filepath, maskedpath):
 def main(down_input_path, down_input_mask_path, masked_path, result_path, output_path, type):
 
     read_and_mask(down_input_path, down_input_mask_path, masked_path)
-    # utils.bfs_get_kernel("./masked.png")
-    y, kernel, ori_offset_r, ori_offset_c = calcConv(result_path, masked_path)
+
+    y, kernel, ori_offset_r, ori_offset_c = calcConv(result_path, masked_path) # 这里顺便返回了kernel在原图上的位置，用于做坐标变换。
     print(y.shape)
 
     y_row = y.shape[0]
@@ -54,7 +54,7 @@ def main(down_input_path, down_input_mask_path, masked_path, result_path, output
     min = 10000000000
     offset_r = -1
     offset_c = -1
-    for r in range(y_row):
+    for r in range(y_row): # 拿到卷积计算后的矩阵，找到最小的那个位置，其位置代表了在候选图像上的偏移量offset，用于kernel坐标和候选坐标的转换
         for c in range(y_col):
             # print(y[r][c])
             if y[r][c] < min:
@@ -62,19 +62,10 @@ def main(down_input_path, down_input_mask_path, masked_path, result_path, output
                 offset_r = r
                 offset_c = c
 
-
+    # 建图并且计算graph-cut，即最小割
     partition = buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, down_input_path , result_path, kernel, type=type)
 
     source, dest = partition
-    test = np.zeros((kernel.shape[0], kernel.shape[1], 3))
-
-    for xy in source:
-        x, y = xy
-        test[x][y] = kernel[x][y]
-    for xy in dest:
-        x, y = xy
-        test[x][y] = kernel[x][y]
-    Image.fromarray((test).astype(np.uint8)).save("test_graph.jpg")
 
     origin = np.asarray(Image.open(down_input_path))[...,:3]
     mask = np.asarray(Image.open(masked_path))[...,:3]
@@ -104,14 +95,13 @@ def main(down_input_path, down_input_mask_path, masked_path, result_path, output
     print(ori_offset_r, ori_offset_c)
     Image.fromarray((output).astype(np.uint8)).save("test.jpg")
 
-    print("____")
+
     MatrixA = utils.calcMatrixA(res_list)
     b_r, b_g, b_b = utils.calcB(res_list, origin, res, ori_offset_r, ori_offset_c, offset_r, offset_c)
-    print("tmp1")
+
     x_r = jparse.solveMatrix(MatrixA, np.array(b_r))
-    print("tmp2")
+
     x_g = jparse.solveMatrix(MatrixA, np.array(b_g))
-    print("tmp3")
 
     x_b = jparse.solveMatrix(MatrixA, np.array(b_b))
 
