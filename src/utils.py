@@ -25,7 +25,7 @@ def dilatation(image):
         print('Could not open or find the image: ', image)
         exit(0)
     dilatation_size = 16
-    dilation_shape = morph_shape(2)
+    dilation_shape = cv.MORPH_ELLIPSE
     # print("which?{}".format(cv.getTrackbarPos(title_trackbar_element_shape, title_dilation_window)))
     element = cv.getStructuringElement(dilation_shape, (2 * dilatation_size + 1, 2 * dilatation_size + 1),
                                        (dilatation_size, dilatation_size))
@@ -35,23 +35,15 @@ def dilatation(image):
 
 def bfs_get_kernel(masked_path):
     pic = np.asarray(Image.open(masked_path))[...,:3]
-    # print(pic.shape)
     shape = pic.shape
     raw = shape[0]
     col = shape[1]
     output = np.zeros((raw, col, 3))
-    visited = np.zeros((raw, col, 1))
-    for i in range(raw):
-        for j in range(col):
-            if pic[i][j][0] == 0 and pic[i][j][1] == 0 and pic[i][j][2] == 0:
-                visited[i][j] = 1
-    my_queue = deque()
     black_queue = deque()
     for i in range(raw):
         for j in range(col):
             if pic[i][j][0] == 0 and pic[i][j][1] == 0 and pic[i][j][2] == 0:
                 black_queue.append((i, j))
-    print(len(black_queue))
     edge_black_queue = deque()
     for xy in black_queue:
         x, y = xy
@@ -63,13 +55,11 @@ def bfs_get_kernel(masked_path):
             edge_black_queue.append((x, y))
         elif y - 1 >= 0 and not (pic[x][y-1][0] == 0 and pic[x][y-1][1] == 0 and pic[x][y-1][2] == 0):
             edge_black_queue.append((x, y))
-    print(len(edge_black_queue))
     
     for xy in edge_black_queue:
         x, y = xy
         output[x][y] = [255, 255, 255]
     Image.fromarray((output).astype(np.uint8)).save("tmp.jpg")
-    # exit()
     
     dilatation("tmp.jpg")
     
@@ -90,7 +80,6 @@ def bfs_get_kernel(masked_path):
             if pic_b[r][c][0] > 20 and pic_b[r][c][1] > 20 and pic_b[r][c][2] > 20:
                 up = max(r-1, 0)
                 break
-    # print("up:{}, raw:{}".format(up, raw))
     for r in range(raw):
         if down != raw:
             break
@@ -98,7 +87,6 @@ def bfs_get_kernel(masked_path):
             if pic_b[raw-1-r][c][0] > 20 and pic_b[raw-1-r][c][1] > 20 and pic_b[raw-1-r][c][2] > 20:
                 down = min(raw-r, raw-1)
                 break
-    # print("down:{}".format(down))
     
     for c in range(col):
         if left != -1:
@@ -119,7 +107,6 @@ def bfs_get_kernel(masked_path):
     for r in range(up, down + 1):
         for c in range(left, right + 1):
             kernel[r - up][c - left] = pic_b[r][c]
-    # print(kernel.shape)
     Image.fromarray((kernel).astype(np.uint8)).save("kernel.jpg")
     return kernel, up, left
 
@@ -189,16 +176,9 @@ def calcConvJittor(A, kernel):
         'i1+i3',
         'i4'
     ])
-    # print(aa)
-    
-    
     kk = kernel.broadcast_var(aa)
-    r = kk.shape[0]
-    c = kk.shape[1]
-    print(kk.shape)
     yy = (kk-aa)*(kk-aa)*(kk!=0)
     y = yy.sum([2, 3, 4])
-    print(y)
     return y
     
     
@@ -208,7 +188,7 @@ def adjacent(x, y, a, b):
 def calcMatrixA(res_list: list):
     N = res_list.__len__()
     print("size:{}".format(N))
-    MaxtrixA = np.zeros((N, N, ), dtype=np.uint8)
+    MaxtrixA = np.zeros((N, N, ))
     for i in range(N):
         for j in range(N):
             if i == j:
@@ -219,16 +199,16 @@ def calcMatrixA(res_list: list):
                 MaxtrixA[i][j] = 0
     return MaxtrixA
 
-def calcB(res_list, res_pic):
+def calcB(res_list, source_pic, target_pic, source_offset_r, source_offset_c, target_offset_r, target_offset_c):
     N = res_list.__len__()
     ret_r = []
     ret_g = []
     ret_b = []
     for i in range(N):
         x, y = res_list[i]
-        row = res_pic.shape[0]
-        col = res_pic.shape[1]
-        rgb = res_pic[x][y]
+        row = source_pic.shape[0]
+        col = source_pic.shape[1]
+        rgb = target_pic[x-source_offset_r+target_offset_r][y-source_offset_c+target_offset_c].astype(np.int32)
         adj_list = []
         if x+1 < row:
             adj_list.append((x+1, y))
@@ -238,10 +218,13 @@ def calcB(res_list, res_pic):
             adj_list.append((x, y+1))
         if y-1 >= 0:
             adj_list.append((x, y-1))
-        tmp = len(adj_list) * rgb
+        tmp = 4 * rgb
         for ab in adj_list:
             a, b = ab
-            tmp -= res_pic[a][b]
+            tmp -= target_pic[a-source_offset_r+target_offset_r][b-source_offset_c+target_offset_c].astype(np.int32)
+            if (a, b) not in res_list:
+                tmp += source_pic[a][b].astype(np.int32) 
+        
         ret_r.append(tmp[0])
         ret_g.append(tmp[1])
         ret_b.append(tmp[2])

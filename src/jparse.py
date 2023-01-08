@@ -61,7 +61,7 @@ def solveMatrix(A, b):
             cuda_spmm_alg=1)
         # print(output)
         vec1 = output + jt.array(d)
-        if ((vec - vec1)**2 < 3).all():
+        if ((vec - vec1)**2 == 0).all():
             break
         vec = vec1
     return vec.numpy().astype(np.float32)

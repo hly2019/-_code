@@ -44,9 +44,9 @@ def calcConv(filepath, maskedpath):
 
 
 
-read_and_mask("../数据/input1.jpg", "../数据/input1_mask.jpg", "./masked.png")
+read_and_mask("../数据/down_input1.jpg", "../数据/down_input1_mask.jpg", "./masked.png")
 # utils.bfs_get_kernel("./masked.png")
-y, kernel, ori_offset_r, ori_offset_c = calcConv("../数据/input1/result_img001.jpg", "./masked.png")
+y, kernel, ori_offset_r, ori_offset_c = calcConv("../数据/input1/down_result_img002.jpg", "./masked.png")
 print(y.shape)
 
 y_row = y.shape[0]
@@ -63,7 +63,7 @@ for r in range(y_row):
             offset_c = c
 
 
-partition = buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, "../数据/input1.jpg" , "../数据/input1/result_img001.jpg", kernel)
+partition = buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, "../数据/down_input1.jpg" , "../数据/input1/down_result_img002.jpg", kernel)
 
 source, dest = partition
 test = np.zeros((kernel.shape[0], kernel.shape[1], 3))
@@ -76,9 +76,9 @@ for xy in dest:
     test[x][y] = kernel[x][y]
 Image.fromarray((test).astype(np.uint8)).save("test_graph.jpg")
 
-origin = np.asarray(Image.open("../数据/input1.jpg"))[...,:3]
+origin = np.asarray(Image.open("../数据/down_input1.jpg"))[...,:3]
 mask = np.asarray(Image.open("./masked.png"))[...,:3]
-res = np.asarray(Image.open("../数据/input1/result_img001.jpg"))[...,:3]
+res = np.asarray(Image.open("../数据/input1/down_result_img002.jpg"))[...,:3]
 
 
 res_list = []
@@ -108,18 +108,21 @@ Image.fromarray((output).astype(np.uint8)).save("test.jpg")
 
 print("____")
 MatrixA = utils.calcMatrixA(res_list)
-b_r, b_g, b_b = utils.calcB(res_list, output)
-
+b_r, b_g, b_b = utils.calcB(res_list, origin, res, ori_offset_r, ori_offset_c, offset_r, offset_c)
+print("tmp1")
 x_r = jparse.solveMatrix(MatrixA, np.array(b_r))
+print("tmp2")
 x_g = jparse.solveMatrix(MatrixA, np.array(b_g))
+print("tmp3")
+
 x_b = jparse.solveMatrix(MatrixA, np.array(b_b))
 
 for i in range(res_list.__len__()):
     x, y = res_list[i]
     # print(x_r[i])
-    output[x][y][0] = x_r[i]
-    output[x][y][1] = x_g[i]
-    output[x][y][2] = x_b[i]
+    output[x][y][0] = x_r[i] if x_r[i] <= 255 else 255
+    output[x][y][1] = x_g[i] if x_g[i] <= 255 else 255
+    output[x][y][2] = x_b[i] if x_b[i] <= 255 else 255
 Image.fromarray((output).astype(np.uint8)).save("test1.jpg")
 
     
