@@ -5,9 +5,6 @@ import copy
 import cv2 as cv
 import math
 import networkx as nx
-graph = nx.Graph()
-# graph[(-1, -1)] = {} # patch A
-# graph[(-2, -2)] = {} # patch B
 
 def calcM(s_x, s_y, t_x, t_y, offset_r_a, offset_c_a, offset_r_b, offset_c_b, A, B):
     rgb_a_s = np.float32(A[s_x+offset_r_a][s_y+offset_c_a])
@@ -27,6 +24,7 @@ def isBlack(r, c, pic):
     return pic[r][c][0] < 5 and pic[r][c][1] < 5 and pic[r][c][2] < 5
 
 def buildGraph(offset_r, offset_c, ori_offset_r, ori_offset_c, input_path, result_path, kernel, vertical=True):
+    graph = nx.Graph()
     input_pic = np.asarray(Image.open(input_path))[...,:3]
     result_pic = np.asarray(Image.open(result_path))[...,:3]
 

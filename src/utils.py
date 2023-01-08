@@ -31,7 +31,7 @@ def dilatation(image):
                                        (dilatation_size, dilatation_size))
     dilatation_dst = cv.dilate(src, element)
     # print(dilatation_dst.shape)
-    Image.fromarray((dilatation_dst).astype(np.uint8)).save("xxx.jpg")
+    Image.fromarray((dilatation_dst).astype(np.uint8)).save("dilatation.jpg")
 
 def bfs_get_kernel(masked_path):
     pic = np.asarray(Image.open(masked_path))[...,:3]
@@ -64,7 +64,7 @@ def bfs_get_kernel(masked_path):
     dilatation("tmp.jpg")
     
     pic_b = np.zeros((raw, col, 3))
-    tmp = np.asarray(Image.open("xxx.jpg"))[...,:3]
+    tmp = np.asarray(Image.open("dilatation.jpg"))[...,:3]
     for i in range(raw):
         for j in range(col):
             if (tmp[i][j] >= [200, 200, 200]).all():
@@ -154,8 +154,6 @@ def bestLocOffset(A, kernel):
     return min_o_r, min_o_c
 
 def calcConvJittor(A, kernel):
-    print(kernel.shape)
-    print(A.shape)
     a_r = A.shape[0]
     a_c = A.shape[1]
     k_r = kernel.shape[0]
