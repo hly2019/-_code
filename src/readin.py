@@ -5,7 +5,7 @@ import jittor as jt
 from graph import buildGraph
 import jparse
 
-subdir = "../数据/input/"
+subdir = "../data/input/"
 dir_num = 1
 
 pic_name_pref = "result_img"
@@ -130,16 +130,16 @@ def main(down_input_path, down_input_mask_path, masked_path, result_path, output
     Image.fromarray((output).astype(np.uint8)).save(output_path)
 
 type=1
-down_input_path = "../数据/down_input{}.jpg".format(type)
-down_input_mask_path = "../数据/down_input{}_mask.jpg".format(type)
-masked_path = "../数据/masked_input{}.png".format(type)
-result_path = "../数据/input2/down_result_img002.jpg"
-output_path = "../数据/output2/output002.jpg"
+down_input_path = "../data/down_input{}.jpg".format(type)
+down_input_mask_path = "../data/down_input{}_mask.jpg".format(type)
+masked_path = "../data/masked_input{}.png".format(type)
+result_path = "../data/input2/down_result_img002.jpg"
+output_path = "../data/output2/output002.jpg"
 for i in range(1, 21):
     if i < 10:
-        result_path = "../数据/input{}/down_result_img00{}.jpg".format(type, i)
-        output_path = "../数据/output{}/output00{}.jpg".format(type, i)
+        result_path = "../data/input{}/down_result_img00{}.jpg".format(type, i)
+        output_path = "../data/output{}/output00{}.jpg".format(type, i)
     else:
-        result_path = "../数据/input{}/down_result_img0{}.jpg".format(type, i)
-        output_path = "../数据/output{}/output0{}.jpg".format(type, i)
+        result_path = "../data/input{}/down_result_img0{}.jpg".format(type, i)
+        output_path = "../data/output{}/output0{}.jpg".format(type, i)
     main(down_input_path, down_input_mask_path, masked_path, result_path, output_path, type)
