@@ -71,7 +71,7 @@ def main(down_input_path, down_input_mask_path, masked_path, result_path, output
     mask = np.asarray(Image.open(masked_path))[...,:3]
     res = np.asarray(Image.open(result_path))[...,:3]
 
-
+    # 根据partition的结果得到拼接图像
     res_list = []
     output = np.zeros((mask.shape[0], mask.shape[1], 3))
     for r in range(output.shape[0]):
@@ -95,7 +95,7 @@ def main(down_input_path, down_input_mask_path, masked_path, result_path, output
     print(ori_offset_r, ori_offset_c)
     Image.fromarray((output).astype(np.uint8)).save("test.jpg")
 
-
+    # 下面为图像融合。先计算矩阵A和向量b，然后对rgb三通道分别求解。
     MatrixA = utils.calcMatrixA(res_list)
     b_r, b_g, b_b = utils.calcB(res_list, origin, res, ori_offset_r, ori_offset_c, offset_r, offset_c)
 
@@ -105,6 +105,7 @@ def main(down_input_path, down_input_mask_path, masked_path, result_path, output
 
     x_b = jparse.solveMatrix(MatrixA, np.array(b_b))
 
+    # 计算结果可能越界，需要响应截断处理。
     for i in range(res_list.__len__()):
         x, y = res_list[i]
         # print(x_r[i])
@@ -128,7 +129,7 @@ def main(down_input_path, down_input_mask_path, masked_path, result_path, output
              output[x][y][2] = 255 
     Image.fromarray((output).astype(np.uint8)).save(output_path)
 
-type=4
+type=1
 down_input_path = "../数据/down_input{}.jpg".format(type)
 down_input_mask_path = "../数据/down_input{}_mask.jpg".format(type)
 masked_path = "../数据/masked_input{}.png".format(type)

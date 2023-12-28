@@ -22,7 +22,7 @@ import cv2
 
 # # cv2.waitKey()
 # # cv2.destroyAllWindows()
-for i in [1]:
+for i in range(1, 21):
     # if i == 17:
         # continue
     if i < 10:
@@ -30,8 +30,8 @@ for i in [1]:
     else:
         filename = "result_img0{}.jpg".format(i)
     print(filename)
-    result = cv2.imread("../数据/input4/{}".format(filename))
+    result = cv2.imread("../数据/input1/{}".format(filename))
     # result = cv2.pyrDown(result)
     # result = cv2.pyrDown(result)
-    cv2.imwrite("../数据/input4/down_{}".format(filename), result)
+    cv2.imwrite("../数据/input1/down_{}".format(filename), result)
 

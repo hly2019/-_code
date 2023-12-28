@@ -1,0 +1,12 @@
+*.ipynb
+__pycache__
+build
+dist
+*.egg-info
+*.npy
+*.log
+*.zip
+*.pyc
+data
+run.sh
+tmp
